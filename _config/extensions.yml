@@ -6,3 +6,7 @@ after: '#silvershop-extensions'
 SilverShop\Model\Order:
   extensions:
     - Extension\OrderExtension
+
+SilverShop\Page\Product:
+  extensions:
+    - Extension\ProductExtension
