@@ -14,7 +14,7 @@ class OrderExtension extends Extension
             $product = $item->Product();
             $products[] = [
                 'item_id' => $product->ID,
-                'sku' => $product->ID,
+                'sku' => $product->InternalItemID,
                 'qty' => $item->Quantity,
                 'name' => $product->Title,
                 'price' => $product->BasePrice,

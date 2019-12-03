@@ -14,8 +14,8 @@ class InventoryController extends Controller
 
     public function is_product_salable(HTTPRequest $request)
     {
-        $productID = $request->params('ItemID');
-        $product = Product::get()->byID($productID);
+        $productInternalID = $request->params('ItemID');
+        $product = Product::get()->filter(['InternalItemID' => $productInternalID])->first;
         // TODO: Actually check if product is available
         if($product) {
             return true;

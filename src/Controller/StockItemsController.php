@@ -10,8 +10,8 @@ class StockItemsController extends Controller
 {
     public function index(HTTPRequest $request)
     {
-        $productID = $request->params('ItemID');
-        $product = Product::get()->byID($productID);
+        $productInternalID = $request->params('ItemID');
+        $product = Product::get()->filter(['InternalItemID' => $productInternalID])->first();
         if($product) {
             return json_encode([
                 'item_id' => $product->ID,

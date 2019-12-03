@@ -58,15 +58,15 @@ class GuestCartController extends Controller
                     $body = json_decode($request->getBody());
                     $cart = ShoppingCart::singleton();
 
-                    $itemId = $body->cartItem->sku;
+                    $itemIInternalId = $body->cartItem->sku;
                     $quantity = $body->cartItem->qty;
 
                     $order = Order::get()->byID($orderID);
 
                     $buyableclass = Product::class;
                     $buyable = $buyableclass::has_extension(Versioned::class)
-                        ? Versioned::get_by_stage($buyableclass, 'Live')->byID($itemId)
-                        : DataObject::get($buyableclass)->byID($itemId);
+                        ? Versioned::get_by_stage($buyableclass, 'Live')->filter(['InternalItemID' => $itemIInternalId])->first()
+                        : DataObject::get($buyableclass)->filter(['InternalItemID' => $itemIInternalId])->first();
 
                     $buyable = $cart->getCorrectBuyable($buyable);
                     $filter = [
@@ -95,8 +95,8 @@ class GuestCartController extends Controller
                     $item->write();
 
                     return json_encode([
-                        'item_id' => $itemId,
-                        'sku' => $itemId,
+                        'item_id' => $buyable->ID,
+                        'sku' => $buyable->InternalItemID,
                         'qty' => $item->Quantity,
                         'price' => $buyable->BasePrice,
                         'product_type' => 'simple'

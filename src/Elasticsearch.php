@@ -49,7 +49,7 @@ class Elasticsearch
                 'body' => [
                     'id' => $product->ID,
                     'name' => $product->Title,
-                    'sku' => $product->ID,
+                    'sku' => $product->InternalItemID,
                     'url_key' => $product->URLSegment,
                     'url_path' => preg_replace('/\\?.*/', '', $product->Link()),
                     'type_id' => 'simple',
@@ -58,7 +58,7 @@ class Elasticsearch
                     'price_incl_tax' => $product->BasePrice,
                     'regular_price' => $product->BasePrice,
                     'priceInclTax' => $product->BasePrice,
-                    'status' => 1,
+                    'status' => $product->AllowPurchase ? 1 : 2,
                     'visibility' => 4,
                     'category_ids' => [
                         $product->ParentID
