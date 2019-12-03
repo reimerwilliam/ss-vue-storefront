@@ -1,0 +1,9 @@
+---
+Name: ss-vue-storefront-routes
+After: framework/_config/routes#coreroutes
+---
+SilverStripe\Control\Director:
+  rules:
+    'rest/V1/guest-carts/$OrderID/$Action': Controller\GuestCartController
+    'rest/V1/stockItems/$ItemID': Controller\StockItemsController
+    'rest/V1/inventory//$Action/$ItemID/$StockID': Controller\InventoryController

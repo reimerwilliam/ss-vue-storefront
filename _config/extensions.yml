@@ -1,0 +1,8 @@
+---
+Name: ss-vue-storefront-extensions
+after: '#silvershop-extensions'
+---
+
+SilverShop\Model\Order:
+  extensions:
+    - Extension\OrderExtension

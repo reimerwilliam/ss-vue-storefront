@@ -1,1 +1,4 @@
 node_modules
+vendor
+client/dist
+resources
