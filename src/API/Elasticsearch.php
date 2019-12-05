@@ -58,6 +58,8 @@ class Elasticsearch
                     'id' => $product->ID,
                     'name' => $product->Title,
                     'sku' => $product->InternalItemID,
+                    // TODO: image host
+                    'image' => $product->Image() ? 'http://silvershop.local/' . $product->Image()->Link() : null,
                     'url_key' => $product->URLSegment,
                     'url_path' => preg_replace('/\\?.*/', '', $product->Link()),
                     'type_id' => 'simple',
