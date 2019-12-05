@@ -3,6 +3,7 @@
 namespace SSVueStorefront\API;
 
 use Elasticsearch\ClientBuilder;
+use Page;
 use SilverShop\Page\Product;
 use SilverShop\Page\ProductCategory;
 use SilverStripe\Versioned\Versioned;

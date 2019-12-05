@@ -23,10 +23,6 @@ class GuestCartController extends Controller
         $method = $request->httpMethod();
 
         $response = $this->getResponse();
-        $response->addHeader('Access-Control-Allow-Origin', '*');
-        $response->addHeader('Access-Control-Allow-Headers', '*');
-        $response->addHeader('Access-Control-Allow-Methods', '*');
-        $response->addHeader('Access-Control-Max-Age', 86400);
 
         if(!$orderID && !$action) {
             $order = ShoppingCart::curr();
@@ -104,6 +100,7 @@ class GuestCartController extends Controller
                 }
                 break;
             case 'estimate-shipping-methods':
+                // TODO: Get shipping methods from CMS
                 if($method == 'POST') {
                     $response->setBody(json_encode([
                         'carrier_code' => 'postnord',
@@ -121,6 +118,7 @@ class GuestCartController extends Controller
                 }
                 break;
             case 'payment-methods':
+                // TODO: Get shipping methods from CMS/config
                 if($method == 'GET') {
                     $response->setBody(json_encode([
                         [
@@ -139,26 +137,31 @@ class GuestCartController extends Controller
                 if($method == 'GET') {
                     $order = Order::get()->byID($orderID);
                     $order->calculate();
-                    $response->setBody(json_encode([
-                        'grand_total' => $order->SubTotal(),
-                        'base_currency_code' => 'USD',
-                        'quote_currency_code' => 'USD',
-                        'items_qty' => $order->Items()->count(),
-                        'items' => $order->viewableProducts(),
-                        'total_segments' => [
-                            [
-                                'code' => 'subtotal',
-                                'title' => 'Subtotal',
-                                'value' => $order->SubTotal()
-                            ],
-                            [
-                                'code' => 'grand_total',
-                                'title' => 'Grand Total',
-                                'value' => $order->SubTotal(),
-                                'area' => 'footer'
-                            ]
-                        ]
-                    ]));
+                    $response->setBody(json_encode($order->viewableTotals()));
+                }
+                break;
+            case 'shipping-information':
+                // Maybe store some shipping information one the order here?
+                if($method == 'POST') {
+                    $body = json_decode($request->getBody());
+                    $order = Order::get()->byID($orderID);
+                    $order->calculate();
+                    $response->setBody(json_encode($order->viewableTotals()));
+                }
+                break;
+            case 'billing-address':
+                if($method == 'POST') {
+                    $data = json_decode($request->getBody())->address;
+                    $order = Order::get()->byID($orderID);
+                    $order->setBillingAddress($data);
+                    $response->setBody($orderID);
+                }
+                break;
+            case 'order':
+                if($method == 'PUT') {
+                    // Handle payment
+                    $body = json_decode($request->getBody());
+                    $response->setBody(json_encode($orderID));
                 }
                 break;
             default:
