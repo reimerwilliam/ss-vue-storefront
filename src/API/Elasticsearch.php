@@ -1,5 +1,7 @@
 <?php
 
+namespace SSVueStorefront\API;
+
 use Elasticsearch\ClientBuilder;
 use SilverShop\Page\Product;
 use SilverShop\Page\ProductCategory;
@@ -8,9 +10,15 @@ use SilverStripe\Versioned\Versioned;
 // TODO: Use connection variables from config file
 class Elasticsearch
 {
-    public static function syncCategories()
+    private $client;
+
+    function __construct()
     {
-        $client = ClientBuilder::create()->build();
+        $this->client = ClientBuilder::create()->build();
+    }
+
+    public function syncCategories()
+    {
         $categories = Versioned::get_by_stage(ProductCategory::class, 'Live');
 
         foreach($categories as $key => $category) {
@@ -32,13 +40,12 @@ class Elasticsearch
                 ]
             ];
 
-            $client->index($item);
+            $this->client->index($item);
         }
     }
 
-    public static function syncProducts()
+    public function syncProducts()
     {
-        $client = ClientBuilder::create()->build();
         $products = Versioned::get_by_stage(Product::class, 'Live');
         foreach($products as $product) {
             $category = ProductCategory::get()->byID($product->ParentID);
@@ -78,14 +85,43 @@ class Elasticsearch
                 ]
             ];
 
-            $client->index($item);
+            $this->client->index($item);
         }
 
     }
 
-    public static function migrate()
+    public function syncCMSPages()
     {
-        self::syncCategories();
-        self::syncProducts();
+        $pages = Versioned::get_by_stage(Page::class, 'Live')->filter(['SyncToSF' => true]);
+        foreach($pages as $page) {
+            $item = [
+                'index' => 'vue_storefront_catalog',
+                'id' => $page->ID,
+                'type' => 'cms_page',
+                'body' => [
+                    'page_id' => $page->ID,
+                    'title' => $page->Title,
+                    'identifier' => $page->URLSegment,
+                    'content' => $page->Content,
+                    'content_header' => $page->Title,
+                    'meta_description' => $page->MetaDescription,
+                    'meta_keywords' => 'something',
+                    'store_id' => $page->ID
+                ]
+            ];
+
+            $this->client->index($item);
+        }
+    }
+
+    public function migrate()
+    {
+        $this->syncCategories();
+        $this->syncProducts();
+    }
+
+    public function migrateCMS()
+    {
+        $this->syncCMSPages();
     }
 }

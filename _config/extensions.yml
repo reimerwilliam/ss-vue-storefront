@@ -3,6 +3,10 @@ Name: ss-vue-storefront-extensions
 after: '#silvershop-extensions'
 ---
 
+Page:
+  extensions:
+    - SSVueStorefront\Extension\PageExtension
+
 SilverShop\Model\Order:
   extensions:
     - Extension\OrderExtension

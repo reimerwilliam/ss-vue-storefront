@@ -2,13 +2,14 @@
 
 namespace Extension;
 
-use Elasticsearch;
+use SSVueStorefront\API\Elasticsearch;
 use SilverStripe\Core\Extension;
 
 class ProductExtension extends Extension
 {
     public function onAfterWrite()
     {
-        Elasticsearch::migrate();
+        $elasticsearch = new Elasticsearch();
+        $elasticsearch->migrate();
     }
 }
