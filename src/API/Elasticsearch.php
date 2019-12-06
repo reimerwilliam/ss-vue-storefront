@@ -7,11 +7,13 @@ use Page;
 use SilverShop\Page\Product;
 use SilverShop\Page\ProductCategory;
 use SilverStripe\Versioned\Versioned;
+use SSVueStorefront\Model\Attribute;
 
 // TODO: Use connection variables from config file
 class Elasticsearch
 {
     private $client;
+    private $index = 'vue_storefront_catalog';
 
     function __construct()
     {
@@ -24,7 +26,7 @@ class Elasticsearch
 
         foreach($categories as $key => $category) {
             $item = [
-                'index' => 'vue_storefront_catalog',
+                'index' => $this->index,
                 'id' => $category->ID,
                 'type' => 'category',
                 'body' => [
@@ -50,11 +52,17 @@ class Elasticsearch
         $products = Versioned::get_by_stage(Product::class, 'Live');
         foreach($products as $product) {
             $category = ProductCategory::get()->byID($product->ParentID);
+            $attributeValues = $product->AttributeValues();
+            $extraAttributes = [];
+            foreach($attributeValues as $value) {
+                $code = strtolower(Attribute::get()->byID($value->AttributeTypeID)->AttributeCode);
+                $extraAttributes[$code] = $value->Value;
+            }
             $item = [
-                'index' => 'vue_storefront_catalog',
+                'index' => $this->index,
                 'id' => $product->ID,
                 'type' => 'product',
-                'body' => [
+                'body' => array_merge([
                     'id' => $product->ID,
                     'name' => $product->Title,
                     'sku' => $product->InternalItemID,
@@ -85,7 +93,7 @@ class Elasticsearch
                         'is_in_stock' => true,
                         'qty' => 10000
                     ]]
-                ]
+                ], $extraAttributes)
             ];
 
             $this->client->index($item);
@@ -93,12 +101,51 @@ class Elasticsearch
 
     }
 
+    public function syncAttributes()
+    {
+        $attributes = Attribute::get();
+        foreach($attributes as $attribute) {
+            $item = [
+                'index' => $this->index,
+                'id' => $attribute->ID,
+                'type' => 'attribute',
+                'body' => [
+                    'attribute_code' => strtolower($attribute->AttributeCode),
+                    'default_frontend_label' => $attribute->Title,
+                    'frontend_input' => 'text', // TODO: Allow for other types
+                    'is_visible' => true,
+                    'is_required' => $attribute->IsRequired,
+                    'is_wysiwyg_enabled' => true,
+                    'is_html_allowed_on_front' => true,
+                    'used_for_sort' => true,
+                    'is_filterable' => true,
+                    'is_filterable_in_search' => true,
+                    'is_used_in_grid' => true,
+                    'is_visible_in_grid' => true,
+                    'is_filterable_in_grid' => false,
+                    'position' => 0,
+                    'apply_to' => [],
+                    'is_searchable' => 1,
+                    'is_visible_in_advanced_search' => 1,
+                    'is_comparable' => '0',
+                    'attribute_id' => $attribute->ID,
+                    'is_user_defined' => true,
+                    'backend_type' => 'text', // TODO: Allow for other types
+                    'frontend_class' => '',
+                    'is_visible_on_front' => '1'
+                ]
+            ];
+
+            $this->client->index($item);
+        }
+    }
+
     public function syncCMSPages()
     {
         $pages = Versioned::get_by_stage(Page::class, 'Live')->filter(['SyncToSF' => true]);
         foreach($pages as $page) {
             $item = [
-                'index' => 'vue_storefront_catalog',
+                'index' => $this->index,
                 'id' => $page->ID,
                 'type' => 'cms_page',
                 'body' => [
@@ -117,10 +164,11 @@ class Elasticsearch
         }
     }
 
-    public function migrate()
+    public function migrateCatalog()
     {
         $this->syncCategories();
         $this->syncProducts();
+        $this->syncAttributes();
     }
 
     public function migrateCMS()
@@ -128,3 +176,38 @@ class Elasticsearch
         $this->syncCMSPages();
     }
 }
+
+
+
+/*
+    attribute_code: 'name',
+    default_frontend_label: 'Product Name',
+    frontend_input: 'text',
+    is_wysiwyg_enabled: false,
+    is_visible: true,
+    is_html_allowed_on_front: false,
+    used_for_sort_by: true,
+    is_filterable: false,
+    is_filterable_in_search: false,
+    is_used_in_grid: false,
+    is_visible_in_grid: false,
+    is_filterable_in_grid: false,
+    position: 0,
+    apply_to: [],
+    is_searchable: '1',
+    is_visible_in_advanced_search: '1',
+    is_comparable: '0',
+    is_used_for_promo_rules: '0',
+    is_visible_on_front: '0',
+    used_in_product_listing: '1',
+    attribute_id: 73,
+    entity_type_id: '4',
+    is_required: true,
+    options: [],
+    is_user_defined: false,
+    frontend_labels: [],
+    backend_type: 'varchar',
+    is_unique: '0',
+    frontend_class: 'validate-length maximum-length-255',
+    validation_rules: []
+ */

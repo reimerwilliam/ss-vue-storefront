@@ -7,10 +7,14 @@ Page:
   extensions:
     - SSVueStorefront\Extension\PageExtension
 
+SilverShop\Admin\ProductCatalogAdmin:
+  extensions:
+    - SSVueStorefront\Extension\ProductCatalogExtension
+
 SilverShop\Model\Order:
   extensions:
     - Extension\OrderExtension
 
 SilverShop\Page\Product:
   extensions:
-    - Extension\ProductExtension
+    - SSVueStorefront\Extension\ProductExtension
